@@ -1,0 +1,813 @@
+﻿<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENV Working Tools by Ifan</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="g-header">
+  <div class="g-brand" onclick="backToHub()">
+    <span class="g-brand-mark">ENV</span>
+    <div><span class="g-brand-name">Working Tools</span><span class="g-brand-sub">by Ifan</span></div>
+  </div>
+  <div class="g-right">
+    <span class="g-tool-label" id="gToolLabel"></span>
+    <button class="g-back" id="gBack" onclick="backToHub()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      Kembali
+    </button>
+    <button class="tour-start-btn" onclick="startTourFromHub()">Panduan</button>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">Gelap</button>
+  </div>
+</header>
+
+<!-- HUB -->
+<div id="page-hub" class="page active">
+  <div class="hub-hero">
+    <h1>ENV Working Tools</h1>
+    <p>Kumpulan tools kerja yang berjalan sepenuhnya di browser. Tidak ada upload ke server, tidak perlu instalasi, dan bekerja secara offline.</p>
+  </div>
+  <div class="hub-main">
+    <div class="tool-grid">
+      <div class="tool-card" onclick="showTool('pdf-tools')">
+        <div class="tool-card-icon tc-blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2055d4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        </div>
+        <h3>PDF Tools</h3>
+        <p>Tools PDF lengkap dalam satu tempat: Compress, Gabung, Edit Halaman, Split, dan Batch Combine. Semua berjalan 100% offline di browser.</p>
+        <div class="tool-card-footer">
+          <span class="tc-badge all">Semua Browser</span>
+          <span class="tc-launch">Buka &rsaquo;</span>
+        </div>
+      </div>
+      <div class="tool-card" onclick="showTool('rename')">
+        <div class="tool-card-icon tc-green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a7a45" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <h3>Batch File Rename</h3>
+        <p>Rename banyak file sekaligus menggunakan daftar nama dari Excel atau Notepad. Preview sebelum eksekusi, tanpa risiko.</p>
+        <div class="tool-card-footer">
+          <span class="tc-badge chromium">Chrome / Edge</span>
+          <span class="tc-launch">Buka &rsaquo;</span>
+        </div>
+      </div>
+      <div class="tool-card" onclick="showTool('organize')">
+        <div class="tool-card-icon tc-purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/><path d="M9 14l2 2 4-4"/></svg>
+        </div>
+        <h3>File Organizer</h3>
+        <p>Pindahkan file ke subfolder secara otomatis berdasarkan kata kunci pada nama file. Cocok untuk arsip dokumen proyek.</p>
+        <div class="tool-card-footer">
+          <span class="tc-badge chromium">Chrome / Edge</span>
+          <span class="tc-launch">Buka &rsaquo;</span>
+        </div>
+      </div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-header" onclick="toggleGuide()">
+        <h2>Panduan Penggunaan</h2>
+        <svg class="guide-toggle-icon" id="guideIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="guide-body" id="guideBody">
+        <div class="guide-grid">
+          <div class="guide-col">
+            <h4>PDF Tools</h4>
+            <ol>
+              <li>Compress: drag PDF, pilih mode, atur kualitas, klik Kompres Semua</li>
+              <li>Gabung: upload beberapa PDF, atur urutan dengan drag, klik Gabung</li>
+              <li>Edit Halaman: upload PDF, pilih operasi (hapus/ambil/sisipkan/putar), proses</li>
+              <li>Split: upload PDF, pilih mode pemisahan, preview hasil, unduh ZIP</li>
+              <li>Batch Combine: upload template Header/Footer, upload file, proses semua</li>
+            </ol>
+          </div>
+          <div class="guide-col">
+            <h4>Batch File Rename</h4>
+            <ol>
+              <li>Pilih folder berisi file yang akan direname</li>
+              <li>Export daftar file sebagai CSV untuk referensi</li>
+              <li>Paste daftar nama baru (satu per baris, tanpa ekstensi)</li>
+              <li>Cek Preview sebelum eksekusi</li>
+              <li>Klik Eksekusi Rename</li>
+            </ol>
+          </div>
+          <div class="guide-col">
+            <h4>File Organizer</h4>
+            <ol>
+              <li>Pilih folder sumber</li>
+              <li>Buat rules: kata kunci di nama file kemudian pindah ke folder apa</li>
+              <li>Import rules dari CSV jika sudah punya daftar</li>
+              <li>Cek Preview hasil pemetaan</li>
+              <li>Klik Eksekusi untuk memindahkan file</li>
+            </ol>
+          </div>
+        </div>
+        <div class="guide-note">PDF Tools bekerja di semua browser modern. Batch Rename dan File Organizer membutuhkan Chrome 86 ke atas atau Edge 86 ke atas karena menggunakan File System Access API. Firefox dan Safari belum mendukung fitur akses folder secara langsung.</div>
+      </div>
+    </div>
+  </div>
+  <footer class="g-footer" id="mainFooter">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="brand-name">ENV Working Tools by Ifan</div>
+          <div class="brand-desc">Kumpulan tools kerja: PDF Tools, Batch Rename, dan File Organizer. Berjalan sepenuhnya di browser. Aman, gratis, tanpa upload ke server.</div>
+          <button class="story-toggle" onclick="toggleStory(this)">
+            <span>Kenapa aplikasi ini dibuat?</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="story-body" id="storyBody">
+            <p>Aplikasi ini lahir dari kebutuhan pekerjaan. Banyak tools PDF online mengharuskan upload dokumen ke server pihak ketiga. Ini menimbulkan risiko kebocoran data, terutama untuk dokumen teknis atau confidential.</p>
+            <p>ENV Working Tools berjalan sepenuhnya di browser. File tidak pernah meninggalkan perangkatmu. Tidak perlu login, tidak ada iklan, tidak ada biaya berlangganan.</p>
+            <p>Source code terbuka dan bisa diperiksa langsung di file HTML ini. Jika ada saran atau bug, silakan kirim lewat form di bawah.</p>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px">Kirim Masukan</div>
+            <div class="feedback-form">
+              <textarea id="feedbackText" placeholder="Tulis masukan, saran, atau bug yang kamu temukan..."></textarea>
+              <button onclick="sendFeedback()">Kirim via Email</button>
+              <div class="feedback-sent" id="feedbackSent">Terima kasih atas masukannya!</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-links-area">
+          <div class="footer-col">
+            <h4>Hubungi Ifan</h4>
+            <a href="mailto:muhammad.afifani007@gmail.com">Gmail</a>
+            <a href="https://wa.me/6285259707649" target="_blank">WhatsApp</a>
+            <a href="https://www.instagram.com/ifan_ramadhan7/" target="_blank">Instagram</a>
+            <a href="https://www.linkedin.com/in/muhammad-afifani-romadhan/" target="_blank">LinkedIn</a>
+          </div>
+          <div class="footer-col">
+            <h4>Donasi</h4>
+            <div class="qris-box" onclick="openQris()" style="margin-top:2px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M17 17h3M17 20h3M20 14v3"/></svg>
+              <span style="font-size:12px;font-weight:600">Scan QRIS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">2026 Muhammad Afifani Romadhan &middot; Gratis dan Open Source &middot; Berjalan 100% di browser</div>
+    </div>
+  </footer>
+</div>
+
+<!-- PDF TOOLS PAGE -->
+<div id="page-pdf-tools" class="page">
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtnCompress" onclick="switchTab('compress')">Compress PDF</button>
+  <button class="tab-btn" id="tabBtnMerge" onclick="switchTab('merge')">Gabung PDF</button>
+  <button class="tab-btn" id="tabBtnEdit" onclick="switchTab('edit')">Edit Halaman</button>
+  <button class="tab-btn" id="tabBtnSplit" onclick="switchTab('split')">Split PDF</button>
+  <button class="tab-btn" id="tabBtnBatch" onclick="switchTab('batch')">Batch Combine</button>
+</div>
+<main>
+<div id="tab-compress" class="tab-panel active">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="clearAll();toast('Tool Compress direset.')">Reset</button></div>
+  <div class="pdf-dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".pdf" multiple>
+    <div class="drop-icon">&#128196;</div>
+    <div class="drop-title">Drag &amp; Drop file PDF di sini</div>
+    <div class="drop-sub">Pilih sebanyak yang dibutuhkan &middot; Berjalan 100% offline di browser</div>
+    <span class="drop-btn">Pilih File PDF</span>
+  </div>
+  <div class="card">
+    <div class="card-title">Mode Compress</div>
+    <div class="mode-selector">
+      <div class="mode-card active" id="modeStandar" onclick="setMode('standar')">
+        <div class="mode-head"><span class="mode-icon">&#128247;</span><span class="mode-name">PDF Hasil Scan / Foto</span></div>
+        <div class="mode-desc">Untuk PDF berisi foto, hasil scan, atau gambar besar. Compress paling maksimal.</div>
+      </div>
+      <div class="mode-card" id="modeAman" onclick="setMode('aman')">
+        <div class="mode-head"><span class="mode-icon">&#128196;</span><span class="mode-name">PDF Export dari Word / Excel</span></div>
+        <div class="mode-desc">Untuk PDF hasil export dari Word yang berisi shape, ikon, dan logo. Bentuk gambar tetap rapi.</div>
+      </div>
+    </div>
+    <div class="card-title" style="margin-top:20px">Pengaturan Compress</div>
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>Preset Kualitas</label>
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="setPreset('ringan',this)">Ringan</button>
+          <button class="preset-btn active" onclick="setPreset('sedang',this)">Sedang</button>
+          <button class="preset-btn" onclick="setPreset('tinggi',this)">Tinggi</button>
+          <button class="preset-btn" onclick="setPreset('maksimal',this)">Maksimal</button>
+        </div>
+        <div class="slider-hint" id="presetHint">Kualitas sedang, keseimbangan ukuran dan kualitas visual</div>
+      </div>
+      <div class="setting-item">
+        <label>Kualitas Gambar Manual &nbsp;<span id="qLabel">60%</span></label>
+        <div class="slider-row">
+          <input type="range" id="qSlider" min="5" max="95" value="60" oninput="onSlider(this)">
+          <span class="slider-val" id="qVal">60%</span>
+        </div>
+        <div class="slider-hint">Lebih tinggi lebih jernih &middot; Lebih rendah lebih kecil</div>
+      </div>
+      <div class="setting-item">
+        <label>Skala Gambar (DPI Downsample)</label>
+        <div class="scale-row">
+          <select id="scaleSelect" onchange="renderList()">
+            <option value="1.0">Penuh (tidak dikecilkan)</option>
+            <option value="0.75" selected>75% (disarankan)</option>
+            <option value="0.5">50% (lebih kecil lagi)</option>
+            <option value="0.33">33% (agresif)</option>
+          </select>
+        </div>
+        <div class="slider-hint">Gambar beresolusi tinggi akan dikecilkan dimensinya</div>
+      </div>
+      <div class="setting-item">
+        <label>Konversi ke Grayscale</label>
+        <div class="preset-btns" style="margin-top:2px">
+          <button class="preset-btn active" id="colorBtn" onclick="setColor(false,this)">Warna (asli)</button>
+          <button class="preset-btn" id="grayBtn" onclick="setColor(true,this)">Grayscale</button>
+        </div>
+        <div class="slider-hint">Grayscale efektif untuk dokumen teks dan scan</div>
+      </div>
+      <div class="setting-item" style="grid-column:1/-1">
+        <label>Nama File Hasil</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:2px">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:400;color:var(--text2);font-size:13px">
+            <input type="checkbox" id="addSuffix" checked style="accent-color:var(--accent);width:14px;height:14px">
+            Tambahkan sufiks <code>_compressed</code> pada nama file hasil
+          </label>
+        </div>
+        <div class="slider-hint">Jika tidak dicentang, nama file hasil sama dengan aslinya</div>
+      </div>
+    </div>
+    <button class="advanced-toggle" id="advToggle" onclick="toggleAdvanced(this)">
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      <span>Pengaturan lanjutan untuk file besar</span>
+    </button>
+    <div class="advanced-body" id="advancedBody">
+      <div class="settings-grid" style="margin-top:14px">
+        <div class="setting-item">
+          <label>Lewati Gambar Kecil</label>
+          <div class="scale-row">
+            <select id="minSizeSelect">
+              <option value="0">Proses semua gambar</option>
+              <option value="100" selected>Lewati gambar di bawah 100px</option>
+              <option value="200">Lewati gambar di bawah 200px</option>
+              <option value="300">Lewati gambar di bawah 300px</option>
+            </select>
+          </div>
+          <div class="slider-hint">Gambar kecil biasanya ikon atau logo. Melewatinya membuat proses lebih cepat.</div>
+        </div>
+        <div class="setting-item">
+          <label>Pertahankan Transparansi</label>
+          <div class="preset-btns" style="margin-top:2px">
+            <button class="preset-btn active" id="keepTransBtn" onclick="setKeepTrans(true,this)">Ya, pertahankan</button>
+            <button class="preset-btn" id="dropTransBtn" onclick="setKeepTrans(false,this)">Abaikan</button>
+          </div>
+          <div class="slider-hint">Pertahankan agar shape dari Word tidak berubah jadi kotak solid.</div>
+        </div>
+      </div>
+    </div>
+    <div class="batch-note"><span>&#8505;</span><span>Tidak ada batas jumlah file. Semua diproses langsung di browser, satu per satu. Disarankan maksimal 20 file sekaligus agar browser tidak kehabisan memori.</span></div>
+  </div>
+  <div id="workArea" style="display:none">
+    <div class="action-bar">
+      <span class="file-count" id="fileCount"></span>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="clearAll()">Hapus Semua</button>
+        <button class="btn-secondary" id="dlAllBtn" style="display:none" onclick="downloadAll()">Unduh Semua</button>
+        <button class="btn-secondary" id="dlZipBtn" style="display:none" onclick="downloadZip()">Unduh ZIP</button>
+        <button class="btn-secondary" id="cancelBtn" style="display:none;color:var(--danger);border-color:var(--danger)" onclick="requestCancel()">Hentikan</button>
+        <button class="btn-primary" id="compressBtn" onclick="compressAll()">Kompres Semua</button>
+      </div>
+    </div>
+    <div class="summary" id="summary"><span>&#10003;</span><span id="summaryText"></span></div>
+    <div class="file-list" id="fileList"></div>
+  </div>
+</div>
+
+<div id="tab-merge" class="tab-panel">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="mergeClearAll();toast('Tool Gabung PDF direset.')">Reset</button></div>
+  <div class="pdf-dropzone" id="mergeDropzone">
+    <input type="file" id="mergeFileInput" accept=".pdf" multiple>
+    <div class="drop-icon">&#128279;</div>
+    <div class="drop-title">Drag &amp; Drop file PDF untuk digabung</div>
+    <div class="drop-sub">Pilih 2 file atau lebih &middot; Urutkan setelah upload</div>
+    <span class="drop-btn">Pilih File PDF</span>
+  </div>
+  <div id="mergeWorkArea" style="display:none">
+    <div class="action-bar">
+      <span class="file-count" id="mergeFileCount"></span>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="mergeClearAll()">Hapus Semua</button>
+        <button class="btn-primary" id="mergeBtn" onclick="mergePDFs()">Gabung &amp; Unduh</button>
+      </div>
+    </div>
+    <div class="merge-result-box" id="mergeResultBox"><span>&#10003;</span><span id="mergeResultText"></span></div>
+    <div class="card" style="padding:14px 16px;margin-bottom:12px">
+      <div class="card-title">Urutan File (drag untuk mengubah urutan)</div>
+      <div class="merge-list" id="mergeList"></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Hasil PDF akan mengikuti urutan di atas dari atas ke bawah.</div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-edit" class="tab-panel">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="editClear();toast('Tool Edit Halaman direset.')">Reset</button></div>
+  <div class="edit-dropzone" id="editDropzone">
+    <input type="file" id="editFileInput" accept=".pdf">
+    <div class="drop-icon">&#9986;</div>
+    <div class="drop-title">Drag &amp; Drop 1 file PDF di sini</div>
+    <div class="drop-sub">Untuk menghapus, memilih, atau menyisipkan halaman</div>
+    <span class="drop-btn">Pilih File PDF</span>
+  </div>
+  <div id="editWorkArea" style="display:none">
+    <div class="edit-file-info" id="editFileInfo">
+      <div class="edit-file-icon">PDF</div>
+      <div class="edit-file-detail">
+        <div class="edit-file-name" id="editFileName"></div>
+        <div class="edit-file-meta" id="editFileMeta"></div>
+      </div>
+      <button class="btn-secondary" onclick="editClear()" style="flex-shrink:0;padding:5px 12px;font-size:12px">Ganti File</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Pilih Operasi</div>
+      <div class="op-selector">
+        <div class="op-card active" id="opDelete" onclick="setOp('delete')"><div class="op-icon">&#128465;</div><div class="op-name">Hapus Halaman</div><div class="op-desc">Tentukan halaman yang ingin dihapus dari PDF</div></div>
+        <div class="op-card" id="opKeep" onclick="setOp('keep')"><div class="op-icon">&#128204;</div><div class="op-name">Ambil Halaman Tertentu</div><div class="op-desc">Hanya simpan halaman yang kamu tentukan</div></div>
+        <div class="op-card" id="opInsert" onclick="setOp('insert')"><div class="op-icon">&#10133;</div><div class="op-name">Sisipkan dari PDF Lain</div><div class="op-desc">Masukkan halaman dari PDF kedua di posisi tertentu</div></div>
+        <div class="op-card" id="opRotate" onclick="setOp('rotate')"><div class="op-icon">&#128260;</div><div class="op-name">Putar Halaman</div><div class="op-desc">Rotasi halaman tertentu atau semua halaman 90/180/270 derajat</div></div>
+      </div>
+      <div id="editInputArea" style="margin-top:16px">
+        <div id="editPageInputSection">
+          <div class="page-input-group">
+            <div class="page-input-row">
+              <label id="editPageLabel">Halaman yang akan dihapus</label>
+              <input type="text" id="editPageInput" placeholder="Contoh: 1, 3, 5-7, 10">
+              <div class="page-input-hint" id="editPageHint">Gunakan koma untuk halaman terpisah dan tanda hubung untuk rentang. Halaman dihitung dari 1.</div>
+            </div>
+            <div id="rotateSection" style="display:none">
+              <div class="page-input-row" style="margin-bottom:0">
+                <label>Sudut Rotasi</label>
+                <div class="rotate-angle-row">
+                  <button class="rotate-btn active" id="rot90" onclick="setRotate(90,this)">90 derajat (Kanan)</button>
+                  <button class="rotate-btn" id="rot180" onclick="setRotate(180,this)">180 derajat (Balik)</button>
+                  <button class="rotate-btn" id="rot270" onclick="setRotate(270,this)">270 derajat (Kiri)</button>
+                </div>
+                <div class="page-input-hint" style="margin-top:8px">Kosongkan input halaman di atas untuk merotasi SEMUA halaman.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="editInsertSection" style="display:none">
+          <div class="insert-section">
+            <div class="insert-section-title">File PDF kedua yang akan disisipkan</div>
+            <div class="insert-dropzone" id="insertDropzone"><input type="file" id="insertFileInput" accept=".pdf"><span>Klik atau drag PDF kedua ke sini</span></div>
+            <div class="insert-file-info" id="insertFileInfo" style="display:none"></div>
+          </div>
+          <div class="page-input-group" style="margin-top:14px">
+            <div class="page-input-row">
+              <label>Halaman dari PDF kedua yang disisipkan</label>
+              <input type="text" id="insertPagesInput" placeholder="Kosongkan untuk semua halaman. Contoh: 1-3, 5">
+              <div class="page-input-hint">Kosongkan untuk menyisipkan semua halaman dari PDF kedua.</div>
+            </div>
+            <div class="page-input-row">
+              <label>Sisipkan setelah halaman ke-</label>
+              <input type="text" id="insertPosInput" placeholder="Contoh: 3 berarti disisipkan setelah halaman 3. Tulis 0 untuk di awal.">
+              <div class="page-input-hint">Tulis 0 untuk menyisipkan di paling awal.</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn-primary" onclick="processEdit()">Proses &amp; Unduh</button>
+          <button class="btn-secondary" onclick="openPagePreview()" id="previewBtn" style="display:none">Lihat Preview Halaman</button>
+          <button class="btn-secondary" onclick="editClear()">Batal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-split" class="tab-panel">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="splitClear();toast('Tool Split PDF direset.')">Reset</button></div>
+  <div class="edit-dropzone" id="splitDropzone">
+    <input type="file" id="splitFileInput" accept=".pdf">
+    <div class="drop-icon">&#128196;</div>
+    <div class="drop-title">Drag &amp; Drop 1 file PDF di sini</div>
+    <div class="drop-sub">PDF akan dipecah menjadi beberapa file sesuai pengaturan</div>
+    <span class="drop-btn">Pilih File PDF</span>
+  </div>
+  <div id="splitWorkArea" style="display:none">
+    <div class="edit-file-info">
+      <div class="edit-file-icon">PDF</div>
+      <div class="edit-file-detail">
+        <div class="edit-file-name" id="splitFileName"></div>
+        <div class="edit-file-meta" id="splitFileMeta"></div>
+      </div>
+      <button class="btn-secondary" onclick="splitClear()" style="flex-shrink:0;padding:5px 12px;font-size:12px">Ganti File</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Mode Split</div>
+      <div class="split-mode-sel">
+        <div class="op-card active" id="splitModeAll" onclick="setSplitMode('all')"><div class="op-icon">&#128209;</div><div class="op-name">Pisah Semua Halaman</div><div class="op-desc">Setiap halaman menjadi file PDF terpisah</div></div>
+        <div class="op-card" id="splitModeCustom" onclick="setSplitMode('custom')"><div class="op-icon">&#9986;</div><div class="op-name">Pisah di Titik Tertentu</div><div class="op-desc">Tentukan di halaman mana PDF dipecah</div></div>
+      </div>
+      <div id="splitCustomSection" style="display:none">
+        <div class="page-input-row" style="margin-bottom:12px">
+          <label>Pisah setelah halaman ke- (pisahkan dengan koma)</label>
+          <input type="text" id="splitPoints" placeholder="Contoh: 3, 7 berarti File 1: hal.1-3, File 2: hal.4-7, File 3: sisanya">
+          <div class="page-input-hint">Untuk PDF 10 halaman, &quot;3,7&quot; menghasilkan: Hal.1-3 / Hal.4-7 / Hal.8-10</div>
+        </div>
+      </div>
+      <div class="ocr-section" id="splitOcrSection">
+        <div class="ocr-toggle-row">
+          <label class="ocr-toggle-label"><input type="checkbox" id="ocrToggle" onchange="toggleOCRConfig(this.checked)"><span>Auto Rename via OCR</span></label>
+          <span class="ocr-badge-net">Butuh Internet</span>
+        </div>
+        <div class="ocr-config" id="ocrConfig" style="display:none">
+          <div class="ocr-notice"><strong>Perlu koneksi internet (sekali saja)</strong>Library OCR sekitar 5MB akan diunduh saat pertama diaktifkan. Setelah itu proses berjalan langsung di browser tanpa upload file ke manapun.</div>
+          <div class="ocr-notice" style="border-color:var(--warning);background:var(--warning-light);color:var(--warning);margin-top:8px"><strong>Halaman miring atau rotasi berbeda?</strong> OCR tidak bisa membaca teks yang miring atau terotasi. Jika hasilnya kosong atau salah, buka tab <strong>Edit Halaman &rsaquo; Putar Halaman</strong> untuk meluruskan halaman PDF terlebih dahulu, lalu jalankan Split lagi.</div>
+          <div>
+            <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:7px">Kata kunci yang dicari di dalam setiap halaman</label>
+            <input type="text" id="ocrKeyword" class="split-name-input" style="width:100%;font-size:13px" value="Sample Identification" placeholder="Contoh: Sample Identification">
+            <div class="page-input-hint" style="margin-top:5px">App akan mencari label ini di setiap halaman, lalu mengambil nilai setelah tanda titik dua sebagai nama file hasil split.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn-primary" onclick="previewSplit()">Preview &amp; Rename Hasil Split</button>
+        <button class="btn-secondary" onclick="splitClear()">Batal</button>
+      </div>
+    </div>
+    <div id="splitResultArea" style="display:none">
+      <div class="card">
+        <div class="card-title">Hasil Split &mdash; Edit Nama File</div>
+        <div class="split-result-info"><span>&#128161;</span><span id="splitResultInfoText">Edit nama file di bawah ini sebelum mengunduh. Ekstensi .pdf akan ditambahkan otomatis.</span></div>
+        <div class="split-result-list" id="splitResultList"></div>
+        <div class="ocr-rename-bar" id="ocrRenameBar" style="display:none">
+          <button class="btn-secondary" id="ocrRenameBtn" onclick="runOCRRename()">Rename Otomatis via OCR</button>
+          <div class="ocr-progress" id="ocrProgress"><div class="ocr-spinner"></div><span id="ocrProgressText">Memuat library...</span></div>
+        </div>
+        <div class="ocr-result-hint" id="ocrResultHint"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="downloadSplitZip()">Unduh Semua (ZIP)</button>
+          <button class="btn-secondary" onclick="downloadSplitIndividual()">Unduh Satu Per Satu</button>
+        </div>
+        <div class="zip-warning"><span>&#9888;</span><div><strong>Pengguna Windows: File dalam ZIP mungkin diblokir saat diekstrak</strong>Solusi: klik kanan file ZIP, pilih Properties, centang Unblock, lalu klik OK sebelum mengekstrak. Atau gunakan 7-Zip atau WinRAR sebagai ekstrator. Atau pilih Unduh Satu Per Satu untuk menghindari masalah ini.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-batch" class="tab-panel">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="batchClearFiles();batchClearHF('header');batchClearHF('footer');toast('Tool Batch Combine direset.')">Reset</button></div>
+  <div class="card">
+    <div class="card-title">PDF Awal &amp; Akhir (Template)</div>
+    <div class="batch-hf-row">
+      <div>
+        <div class="batch-hf-label" style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">PDF Awal (Header)</div>
+        <div class="batch-hf-drop" id="batchHeaderDrop"><input type="file" id="batchHeaderInput" accept=".pdf"><div class="batch-hf-icon">&#11014;</div><div style="font-size:12px;font-weight:600;margin-bottom:2px">PDF yang disisipkan di AWAL</div><div style="font-size:11px;color:var(--text3)">Klik atau drag file di sini</div><div class="batch-hf-name" id="batchHeaderName" style="display:none"></div></div>
+        <button class="btn-secondary" onclick="batchClearHF('header')" id="batchHeaderClearBtn" style="display:none;margin-top:6px;font-size:11px;padding:4px 10px;width:100%">Hapus Header</button>
+      </div>
+      <div>
+        <div class="batch-hf-label" style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">PDF Akhir (Footer)</div>
+        <div class="batch-hf-drop" id="batchFooterDrop"><input type="file" id="batchFooterInput" accept=".pdf"><div class="batch-hf-icon">&#11015;</div><div style="font-size:12px;font-weight:600;margin-bottom:2px">PDF yang disisipkan di AKHIR</div><div style="font-size:11px;color:var(--text3)">Klik atau drag file di sini</div><div class="batch-hf-name" id="batchFooterName" style="display:none"></div></div>
+        <button class="btn-secondary" onclick="batchClearHF('footer')" id="batchFooterClearBtn" style="display:none;margin-top:6px;font-size:11px;padding:4px 10px;width:100%">Hapus Footer</button>
+      </div>
+    </div>
+    <div class="card-title" style="margin-top:4px">Mode Combine</div>
+    <div class="batch-mode-grid">
+      <div class="batch-mode-card active" id="batchModeHF" onclick="setBatchMode('both')"><div class="batch-mode-diagram">Header<br>+ File<br>+ Footer</div><div class="batch-mode-name">Header + File + Footer</div></div>
+      <div class="batch-mode-card" id="batchModeH" onclick="setBatchMode('header')"><div class="batch-mode-diagram">Header<br>+ File<br>&nbsp;</div><div class="batch-mode-name">Header + File</div></div>
+      <div class="batch-mode-card" id="batchModeF" onclick="setBatchMode('footer')"><div class="batch-mode-diagram">&nbsp;<br>File<br>+ Footer</div><div class="batch-mode-name">File + Footer</div></div>
+    </div>
+  </div>
+  <div class="pdf-dropzone" id="batchDropzone" style="margin-bottom:16px">
+    <input type="file" id="batchFileInput" accept=".pdf" multiple>
+    <div class="drop-icon">&#128193;</div>
+    <div class="drop-title">Drag &amp; Drop file-file PDF yang akan diproses</div>
+    <div class="drop-sub">Bisa banyak file &middot; Urutkan dengan drag setelah upload</div>
+    <span class="drop-btn">Pilih File PDF</span>
+  </div>
+  <div id="batchWorkArea" style="display:none">
+    <div class="batch-result-box" id="batchResultBox"><span>&#10003;</span><span id="batchResultText"></span></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px">
+      <input type="checkbox" id="batchAddSuffix" checked style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0">
+      <label for="batchAddSuffix" style="font-size:12.5px;font-weight:500;color:var(--text2);cursor:pointer;line-height:1.4">Tambahkan sufiks pada nama file hasil <span style="color:var(--text3)">(contoh: _combined, _with-header)</span></label>
+    </div>
+    <div class="action-bar">
+      <span class="file-count" id="batchFileCount"></span>
+      <div class="btn-group">
+        <button class="btn-secondary" onclick="batchClearFiles()">Hapus Semua File</button>
+        <button class="btn-secondary" id="batchRunIndividualBtn" onclick="runBatchCombineIndividual()">Proses &amp; Unduh Satu Per Satu</button>
+        <button class="btn-primary" id="batchRunBtn" onclick="runBatchCombine()">Proses &amp; Unduh ZIP</button>
+      </div>
+    </div>
+    <div class="zip-warning" style="margin-bottom:14px"><span>&#9888;</span><div><strong>Pengguna Windows: File dalam ZIP mungkin diblokir saat diekstrak</strong>Solusi: klik kanan file ZIP, pilih Properties, centang Unblock, lalu klik OK sebelum mengekstrak. Atau gunakan 7-Zip atau WinRAR.</div></div>
+    <div class="card" style="padding:14px 16px">
+      <div class="card-title">File yang Akan Diproses (drag untuk urutan)</div>
+      <div class="merge-list" id="batchList"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- Page Preview Modal -->
+<div class="preview-overlay" id="previewOverlay">
+  <div class="preview-header">
+    <div><div class="preview-title" id="previewTitle">Preview Halaman</div><div class="preview-subtitle" id="previewSubtitle"></div></div>
+    <div class="preview-actions">
+      <button class="select-all-btn" onclick="previewToggleAll()">Pilih Semua</button>
+      <span class="preview-sel-info" id="previewSelInfo"></span>
+    </div>
+  </div>
+  <div class="preview-body" id="previewBody">
+    <div class="preview-loading" id="previewLoading">
+      <div>Memuat preview halaman...</div>
+      <div style="width:200px;margin:10px auto 0;background:var(--border);border-radius:3px;height:3px;overflow:hidden"><div class="preview-progress-bar" id="previewProgressBar" style="width:0%"></div></div>
+    </div>
+    <div class="page-grid" id="pageGrid" style="display:none"></div>
+  </div>
+  <div class="preview-footer">
+    <div class="preview-hint" id="previewFooterHint">Klik thumbnail untuk pilih &middot; Klik ikon zoom untuk memperbesar</div>
+    <div style="display:flex;gap:9px">
+      <button class="preview-btn-close" onclick="closePagePreview()">Tutup</button>
+      <button class="preview-btn-apply" onclick="applyPageSelection()">Terapkan Pilihan</button>
+    </div>
+  </div>
+</div>
+<!-- Zoom Overlay -->
+<div class="zoom-overlay" id="zoomOverlay">
+  <div class="zoom-header">
+    <div class="zoom-page-label" id="zoomLabel">Halaman 1</div>
+    <div class="zoom-nav">
+      <button class="zoom-nav-btn" id="zoomPrev" onclick="zoomNav(-1)">&#8249;</button>
+      <span style="color:rgba(255,255,255,.7);font-size:12px" id="zoomCounter"></span>
+      <button class="zoom-nav-btn" id="zoomNext" onclick="zoomNav(1)">&#8250;</button>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="zoom-sel-btn" id="zoomSelBtn" onclick="zoomToggleSelect()">Pilih Halaman Ini</button>
+      <button class="zoom-close-btn" onclick="closeZoom()">Tutup</button>
+    </div>
+  </div>
+  <div class="zoom-body">
+    <div class="zoom-frame-wrap" id="zoomFrameWrap"><iframe id="zoomIframe" scrolling="auto"></iframe></div>
+  </div>
+</div>
+</div>
+<!-- QRIS Modal (root level - accessible from all pages) -->
+<div class="modal-overlay" id="qrisModal" onclick="if(event.target===this)closeQris()">
+  <div class="modal">
+    <h3>Donasi via QRIS</h3>
+    <p>Scan QR Code di bawah dengan aplikasi e-wallet atau m-banking kamu. Terima kasih atas dukungannya!</p>
+    <div class="qris-placeholder" id="qrisBox">
+      <img id="qrisImg" src="https://lh3.googleusercontent.com/d/133Ct_k-ql0PXklNLgQeWGLswIajbxKtg" alt="QRIS Ifan Creative" style="width:100%;height:100%;object-fit:contain" onerror="qrisFallback()">
+    </div>
+    <button class="modal-close" onclick="closeQris()">Tutup</button>
+  </div>
+</div>
+<!-- Welcome Overlay -->
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-modal">
+    <h3 style="font-size:18px;font-weight:800;margin-bottom:8px">Selamat datang di ENV Working Tools</h3>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Kumpulan tools kerja yang berjalan 100% di browser. Tidak ada upload ke server, tidak perlu instalasi.</p>
+    <button class="btn-primary" style="width:100%;justify-content:center" onclick="closeWelcome()">Mulai Menggunakan</button>
+  </div>
+</div>
+<!-- Tour Overlay (root level - works across all pages) -->
+<div class="tour-overlay" id="tourOverlay">
+  <div class="tour-spotlight" id="tourSpotlight"></div>
+  <div class="tour-tip" id="tourTip">
+    <h4 id="tourTitle"></h4>
+    <p id="tourBody"></p>
+    <div class="tour-nav">
+      <div class="tour-dots" id="tourDots"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="tour-btn-skip" onclick="endTour()">Lewati</button>
+        <button class="tour-btn-next" id="tourNextBtn" onclick="tourNext()">Lanjut</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- RENAME PAGE -->
+<div id="page-rename" class="page">
+<main class="page-wrap wide">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="rnResetAll();toast('Tool Rename direset.')">Reset</button></div>
+  <div class="compat-warn" id="rn-compatWarn">
+    Browser tidak didukung. Fitur ini membutuhkan Chrome 86 ke atas atau Edge 86 ke atas. Firefox dan Safari belum mendukung File System Access API.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card">
+      <div class="section-title"><span class="badge-num">1</span> Pilih Folder</div>
+      <div class="dropzone" id="rn-folderZone" onclick="rnPickFolder()" style="padding:28px 20px">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <div class="drop-title" style="font-size:13px">Klik untuk pilih folder</div>
+        <div class="drop-sub">File di dalam folder akan dibaca (tidak termasuk subfolder)</div>
+      </div>
+      <div id="rn-folderInfo" style="margin-top:12px;display:none">
+        <div class="success-box" id="rn-folderInfoText"></div>
+        <div style="margin-top:10px">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Filter ekstensi (opsional)</label>
+          <div style="display:flex;gap:7px">
+            <input type="text" id="rn-extFilter" placeholder="Contoh: .pdf .jpg .docx" style="flex:1">
+            <button class="btn btn-secondary btn-sm" onclick="rnApplyFilter()">Terapkan</button>
+          </div>
+          <div class="field-hint">Kosongkan untuk tampilkan semua. Pisah dengan spasi.</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="rnExportCSV()">Export Daftar File (.csv)</button>
+          <button class="btn btn-secondary btn-sm" onclick="rnExportTXT()">Export Nama Saja (.txt)</button>
+        </div>
+        <div class="info-box" style="margin-top:10px">Alur di Excel: Export CSV, buka di Excel, isi kolom Nama Baru, simpan sebagai CSV, lalu Import kembali ke tool ini.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="badge-num">2</span> Daftar Nama Baru</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-secondary btn-sm" onclick="rnImportFromClipboard()">Paste dari Clipboard</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rn-csvFile').click()">Import dari File (.txt/.csv)</button>
+        <input type="file" id="rn-csvFile" accept=".txt,.csv" style="display:none" onchange="rnImportFromFile(this)">
+      </div>
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Nama baru (satu per baris, tanpa ekstensi)</label>
+      <textarea id="rn-newNamesInput" placeholder="Nama File Baru 1&#10;Nama File Baru 2&#10;Nama File Baru 3&#10;...&#10;&#10;Ekstensi asli akan dipertahankan otomatis" oninput="rnSchedulePreview()"></textarea>
+      <div class="field-hint" style="margin-top:6px">Baris kosong berarti file tersebut dilewati (tidak direname). Urutan nama sesuai urutan file di tabel.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Pengaturan</div>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Urutkan file berdasarkan</label>
+        <select id="rn-sortMode" onchange="rnRenderPreview()" style="width:auto">
+          <option value="name">Nama file (A ke Z)</option>
+          <option value="name-desc">Nama file (Z ke A)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Jika nama sudah ada</label>
+        <select id="rn-conflictMode" style="width:auto">
+          <option value="skip">Lewati (jangan rename)</option>
+          <option value="suffix">Tambah sufiks _2, _3 ...</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Prefix tambahan</label>
+        <input type="text" id="rn-prefixInput" placeholder="Misal: 2024_" style="width:140px" oninput="rnSchedulePreview()">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Suffix tambahan</label>
+        <input type="text" id="rn-suffixInput" placeholder="Misal: _final" style="width:140px" oninput="rnSchedulePreview()">
+      </div>
+    </div>
+  </div>
+  <div class="card" id="rn-previewCard" style="display:none">
+    <div class="section-title">Preview Rename</div>
+    <div class="stats-row" id="rn-summaryRow"></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Nama File Asli</th><th>Nama Baru</th><th>Status</th></tr></thead>
+        <tbody id="rn-previewBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-success" id="rn-execBtn" onclick="rnExecuteRename()">Eksekusi Rename</button>
+      <button class="btn btn-secondary" onclick="rnRenderPreview()">Refresh Preview</button>
+      <button class="btn btn-secondary" onclick="rnExportCSV()">Export Daftar File (.csv)</button>
+      <span id="rn-execStatus" style="font-size:12px;color:var(--text2)"></span>
+    </div>
+    <div id="rn-progressWrap" style="margin-top:12px;display:none">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="rn-progressBar"></div></div>
+      <div id="rn-progressText" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="card" id="rn-logCard" style="display:none">
+    <div class="section-title">Log Hasil</div>
+    <div class="log-box" id="rn-log"></div>
+    <button class="btn btn-secondary btn-sm" onclick="rnCopyLog()" style="margin-top:10px">Salin Log</button>
+  </div>
+</main>
+</div>
+
+<!-- ORGANIZE PAGE -->
+<div id="page-organize" class="page">
+<main class="page-wrap wide">
+  <div class="tool-reset-strip"><button class="tool-reset-btn" onclick="orgResetAll();toast('Tool Organizer direset.')">Reset</button></div>
+  <div class="compat-warn" id="org-compatWarn">
+    Browser tidak didukung. Fitur ini membutuhkan Chrome 86 ke atas atau Edge 86 ke atas.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card">
+      <div class="section-title"><span class="badge-num">1</span> Pilih Folder Sumber</div>
+      <div class="dropzone" id="org-folderZone" onclick="orgPickFolder()" style="padding:28px 20px">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+        <div class="drop-title" style="font-size:13px">Klik untuk pilih folder</div>
+        <div class="drop-sub">File di root folder (tidak termasuk subfolder)</div>
+      </div>
+      <div id="org-folderInfo" style="margin-top:12px;display:none">
+        <div class="success-box" id="org-folderInfoText"></div>
+        <div style="margin-top:10px">
+          <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Filter ekstensi (opsional)</label>
+          <div style="display:flex;gap:7px">
+            <input type="text" id="org-extFilter" placeholder=".pdf .jpg .docx" style="flex:1">
+            <button class="btn btn-secondary btn-sm" onclick="orgApplyFilter()">Terapkan</button>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn btn-secondary btn-sm" onclick="orgExportFileList()">Export daftar file (.txt)</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="badge-num">2</span> Pengaturan Matching</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+        <label class="radio-label"><input type="radio" name="orgMatchMode" value="contains" checked onchange="orgSchedulePreview()"> Mengandung kata</label>
+        <label class="radio-label"><input type="radio" name="orgMatchMode" value="exact" onchange="orgSchedulePreview()"> Nama persis</label>
+        <label class="radio-label"><input type="radio" name="orgMatchMode" value="startswith" onchange="orgSchedulePreview()"> Diawali dengan</label>
+      </div>
+      <label class="radio-label" style="margin-bottom:12px">
+        <input type="checkbox" id="org-caseSensitive" onchange="orgSchedulePreview()"> Bedakan huruf besar dan kecil
+      </label>
+      <div style="margin-bottom:10px">
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">File tidak cocok rule apapun</label>
+        <select id="org-noMatchMode" onchange="orgSchedulePreview()" style="width:100%">
+          <option value="skip">Biarkan (tidak dipindahkan)</option>
+          <option value="folder">Pindahkan ke folder khusus</option>
+        </select>
+        <input type="text" id="org-noMatchFolder" placeholder="Nama folder (misal: Lainnya)" style="margin-top:7px;display:none" oninput="orgSchedulePreview()">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px">Jika file sudah ada di folder tujuan</label>
+        <select id="org-conflictMode" style="width:100%">
+          <option value="skip">Lewati (tidak ditimpa)</option>
+          <option value="suffix">Tambah sufiks _2, _3 ...</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title"><span class="badge-num">3</span> Rules: Kata Kunci ke Folder</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn btn-primary btn-sm" onclick="orgAddRule()">Tambah Rule</button>
+      <button class="btn btn-secondary btn-sm" onclick="orgImportRulesClipboard()">Paste dari Clipboard</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('org-ruleFile').click()">Import dari File (.csv/.txt)</button>
+      <button class="btn btn-secondary btn-sm" onclick="orgExportRulesCSV()">Export Rules (.csv)</button>
+      <input type="file" id="org-ruleFile" accept=".csv,.txt" style="display:none" onchange="orgImportRulesFile(this)">
+      <button class="btn btn-secondary btn-sm" onclick="orgClearAllRules()">Hapus Semua</button>
+    </div>
+    <div class="info-box" style="margin-bottom:12px">Format import: <code>kata_kunci,nama_folder</code> per baris. Contoh: <code>TEK 3000 BKP,BEKAPAI</code></div>
+    <div class="rules-wrap">
+      <table class="rules-table">
+        <thead><tr>
+          <th style="width:46%">Kata Kunci / Kode (dalam nama file)</th>
+          <th style="width:34%">Nama Folder Tujuan</th>
+          <th style="width:10%">Prioritas</th>
+          <th style="width:10%"></th>
+        </tr></thead>
+        <tbody id="org-rulesBody"></tbody>
+      </table>
+    </div>
+    <div id="org-noRulesMsg" style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Belum ada rule. Klik Tambah Rule atau import dari CSV.</div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="orgAddRule()">Tambah Rule</button>
+      <button class="btn btn-primary btn-sm" onclick="orgRenderPreview()" id="org-previewBtn" disabled>Preview Hasil</button>
+    </div>
+  </div>
+  <div class="card" id="org-previewCard" style="display:none">
+    <div class="section-title"><span class="badge-num">4</span> Preview</div>
+    <div class="stats-row" id="org-summaryRow"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <input type="text" id="org-searchFilter" placeholder="Cari nama file..." style="max-width:260px" oninput="orgFilterTable()">
+      <select id="org-statusFilter" onchange="orgFilterTable()" style="width:auto">
+        <option value="all">Semua status</option>
+        <option value="ok">Akan dipindahkan</option>
+        <option value="skip">Dilewati</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Nama File</th><th>Rule Cocok</th><th>Folder Tujuan</th><th>Status</th></tr></thead>
+        <tbody id="org-previewBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-success" id="org-execBtn" onclick="orgExecuteOrganize()">Eksekusi: Pindahkan File</button>
+      <button class="btn btn-secondary" onclick="orgRenderPreview()">Refresh</button>
+      <span id="org-execStatus" style="font-size:12px;color:var(--text2)"></span>
+    </div>
+    <div id="org-progressWrap" style="display:none;margin-top:10px">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="org-progressBar"></div></div>
+      <div id="org-progressText" style="font-size:11px;color:var(--text3);margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="card" id="org-logCard" style="display:none">
+    <div class="section-title">Log Hasil</div>
+    <div class="log-box" id="org-log"></div>
+    <button class="btn btn-secondary btn-sm" onclick="orgCopyLog()" style="margin-top:10px">Salin Log</button>
+  </div>
+</main>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="pdf-lib.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
