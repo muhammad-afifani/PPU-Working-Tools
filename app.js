@@ -723,7 +723,7 @@ const tourSteps = [
   {
     selector: '#tabBtnEdit',
     title: 'Edit Halaman PDF',
-    body: 'Hapus, ambil, sisipkan, atau putar halaman PDF. Ada preview visual sebelum diproses sehingga kamu bisa cek hasilnya dulu.',
+    body: 'Hapus, ambil, sisipkan, putar, atau luruskan halaman PDF yang miring akibat scan (manual atau deteksi otomatis). Ada preview visual sebelum diproses sehingga kamu bisa cek hasilnya dulu.',
     pos: 'bottom',
     action: () => switchTab('edit')
   },
@@ -1294,13 +1294,15 @@ function editClear() {
 let rotateAngle = 90;
 function setOp(op) {
   editOp = op;
-  ['delete','keep','insert','rotate'].forEach(o => {
+  ['delete','keep','insert','rotate','deskew'].forEach(o => {
     const el = document.getElementById('op'+o.charAt(0).toUpperCase()+o.slice(1));
     if (el) el.classList.toggle('active', o === op);
   });
-  document.getElementById('editPageInputSection').style.display = op !== 'insert' ? 'block' : 'none';
+  document.getElementById('editPageInputSection').style.display = (op !== 'insert' && op !== 'deskew') ? 'block' : 'none';
   document.getElementById('editInsertSection').style.display    = op === 'insert' ? 'block' : 'none';
   document.getElementById('rotateSection').style.display        = op === 'rotate' ? 'block' : 'none';
+  document.getElementById('deskewSection').style.display        = op === 'deskew' ? 'block' : 'none';
+  document.getElementById('editProcessBtn').style.display       = op === 'deskew' ? 'none' : '';
   if (op === 'delete') {
     document.getElementById('editPageLabel').textContent = 'Halaman yang akan dihapus';
     document.getElementById('editPageHint').textContent  = 'Gunakan koma dan tanda hubung. Contoh: 1, 3, 5-7. Halaman dihitung dari 1.';
@@ -1437,6 +1439,337 @@ function dlBlob(bytes, filename) {
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+// ===================== LURUSKAN HALAMAN (DESKEW) =====================
+// Fixes pages scanned slightly crooked. Unlike the 90/180/270 rotate above
+// (which just flips the PDF page's /Rotate flag), arbitrary-angle correction
+// needs the page rasterized, rotated around its center on a canvas, and
+// re-embedded — the PDF spec's page /Rotate entry only allows multiples of 90.
+let deskewAngles      = []; // degrees per page, clockwise-positive (matches CSS/canvas rotate())
+let deskewCanvases    = []; // preview-resolution canvas per page, used for live preview + detection
+let deskewAbortFlag   = false;
+
+function deskewCardTemplate(n) {
+  return `
+    <div class="deskew-card" id="dsk-${n}">
+      <div class="deskew-thumb-wrap" id="dskWrap-${n}">
+        <div class="page-loading" id="dskLoad-${n}"><div class="page-loading-spinner"></div><span>Hal. ${n}</span></div>
+      </div>
+      <div class="deskew-controls">
+        <div class="deskew-page-label"><span>Halaman ${n}</span><span class="deskew-angle-badge" id="dskBadge-${n}">0.0&deg;</span></div>
+        <input type="range" class="deskew-slider" id="dskSlider-${n}" min="-20" max="20" step="0.1" value="0" oninput="setDeskewAngle(${n}, this.value)">
+        <div class="deskew-row-btns">
+          <input type="number" class="deskew-num" id="dskNum-${n}" min="-20" max="20" step="0.1" value="0" onchange="setDeskewAngle(${n}, this.value)">
+          <button class="deskew-mini-btn" id="dskDetectBtn-${n}" onclick="detectSkewAngle(${n})">Deteksi</button>
+          <button class="deskew-mini-btn" onclick="setDeskewAngle(${n},0)">Reset</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function openDeskewEditor() {
+  if (!editFile || !editFilePages) { toast('Pilih file PDF terlebih dahulu.'); return; }
+  deskewAbortFlag = false;
+  deskewAngles   = new Array(editFilePages).fill(0);
+  deskewCanvases = new Array(editFilePages).fill(null);
+
+  const overlay     = document.getElementById('deskewOverlay');
+  const grid        = document.getElementById('deskewGrid');
+  const loading      = document.getElementById('deskewLoading');
+  const loadingText = document.getElementById('deskewLoadingText');
+  const bar         = document.getElementById('deskewProgressBar');
+
+  document.getElementById('deskewSubtitle').textContent = editFile.name + ' · ' + editFilePages + ' halaman';
+  grid.style.display = 'none';
+  grid.innerHTML = '';
+  loading.style.display = 'block';
+  loadingText.textContent = 'Menyiapkan renderer PDF...';
+  bar.style.width = '0%';
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  try {
+    await _ensurePdfJs(msg => loadingText.textContent = msg);
+  } catch (e) {
+    loadingText.textContent = 'Gagal memuat renderer PDF. Periksa koneksi internet lalu coba lagi.';
+    return;
+  }
+  if (deskewAbortFlag) return;
+
+  let pdfJsDoc;
+  try {
+    const srcBuf = await editFile.arrayBuffer();
+    const loadTask = window.pdfjsLib.getDocument({ data: srcBuf.slice(0) });
+    pdfJsDoc = await loadTask.promise;
+  } catch (e) {
+    loadingText.textContent = 'Gagal membaca file PDF.';
+    return;
+  }
+  if (deskewAbortFlag) return;
+
+  loading.style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = Array.from({ length: editFilePages }, (_, i) => deskewCardTemplate(i + 1)).join('');
+
+  const PREVIEW_MAX_DIM = 900;
+  for (let i = 0; i < editFilePages; i++) {
+    if (deskewAbortFlag) break;
+    try {
+      const page         = await pdfJsDoc.getPage(i + 1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale        = PREVIEW_MAX_DIM / Math.max(baseViewport.width, baseViewport.height);
+      const viewport     = page.getViewport({ scale });
+
+      const canvas  = document.createElement('canvas');
+      canvas.width  = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      deskewCanvases[i] = canvas;
+
+      const wrap   = document.getElementById('dskWrap-' + (i + 1));
+      const loader = document.getElementById('dskLoad-' + (i + 1));
+      if (wrap) {
+        const ratio = canvas.width / canvas.height;
+        wrap.style.height    = '0';
+        wrap.style.paddingTop = Math.round((1 / ratio) * 100) + '%';
+        canvas.id = 'dskCanvasEl-' + (i + 1);
+        wrap.appendChild(canvas);
+      }
+      if (loader) loader.style.display = 'none';
+    } catch (e) {
+      console.warn('Gagal render halaman', i + 1, e);
+      const loader = document.getElementById('dskLoad-' + (i + 1));
+      if (loader) loader.innerHTML = '<span style="font-size:20px">&#9888;&#65039;</span><span>Gagal render</span>';
+    }
+    bar.style.width = Math.round(((i + 1) / editFilePages) * 100) + '%';
+    await new Promise(r => setTimeout(r, 0));
+  }
+}
+
+function closeDeskewEditor() {
+  deskewAbortFlag = true;
+  document.getElementById('deskewOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+  document.getElementById('deskewGrid').innerHTML = '';
+  deskewCanvases = [];
+}
+
+function setDeskewAngle(n, angleRaw) {
+  let angle = parseFloat(angleRaw);
+  if (isNaN(angle)) angle = 0;
+  angle = Math.max(-20, Math.min(20, Math.round(angle * 10) / 10));
+  deskewAngles[n - 1] = angle;
+
+  const slider = document.getElementById('dskSlider-' + n);
+  const num    = document.getElementById('dskNum-' + n);
+  const badge  = document.getElementById('dskBadge-' + n);
+  const card   = document.getElementById('dsk-' + n);
+  const canvas = document.getElementById('dskCanvasEl-' + n);
+
+  if (slider) slider.value = angle;
+  if (num)    num.value    = angle;
+  if (badge)  badge.textContent = angle.toFixed(1) + '°';
+  if (card)   card.classList.toggle('dirty', Math.abs(angle) > 0.05);
+  if (canvas) canvas.style.transform = angle ? `rotate(${angle}deg)` : '';
+}
+
+function resetAllSkew() {
+  for (let i = 1; i <= editFilePages; i++) setDeskewAngle(i, 0);
+}
+
+// Projection-profile skew estimation (Postl's method): for each candidate
+// correction angle, project dark pixels onto the axis that angle would
+// produce and score how "peaky" (high-variance) the resulting row histogram
+// is. Real text lines line up into sharp bands when the angle is right.
+function _computeSkewAngle(sourceCanvas) {
+  const MAXW  = 500;
+  const scale = Math.min(1, MAXW / sourceCanvas.width);
+  const w     = Math.max(1, Math.round(sourceCanvas.width * scale));
+  const h     = Math.max(1, Math.round(sourceCanvas.height * scale));
+
+  const small = document.createElement('canvas');
+  small.width = w; small.height = h;
+  const sctx = small.getContext('2d', { willReadFrequently: true });
+  sctx.drawImage(sourceCanvas, 0, 0, w, h);
+  const { data } = sctx.getImageData(0, 0, w, h);
+
+  const gray = new Uint8ClampedArray(w * h);
+  const hist = new Array(256).fill(0);
+  for (let p = 0, i = 0; p < data.length; p += 4, i++) {
+    const g = (data[p] * 0.299 + data[p + 1] * 0.587 + data[p + 2] * 0.114) | 0;
+    gray[i] = g;
+    hist[g]++;
+  }
+
+  // Otsu threshold — separates dark ink from light paper without manual tuning.
+  const total = w * h;
+  let sumAll = 0;
+  for (let t = 0; t < 256; t++) sumAll += t * hist[t];
+  let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t];
+    if (wB === 0) continue;
+    const wF = total - wB;
+    if (wF === 0) break;
+    sumB += t * hist[t];
+    const mB = sumB / wB, mF = (sumAll - sumB) / wF;
+    const between = wB * wF * (mB - mF) * (mB - mF);
+    if (between > maxVar) { maxVar = between; threshold = t; }
+  }
+
+  const pts = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (gray[y * w + x] < threshold) pts.push(x, y);
+    }
+  }
+  if (pts.length < 80) return 0; // too little content (blank/near-blank page) to judge reliably
+
+  const offset = w + h;
+  const binsLen = 2 * (w + h) + 1;
+  function scoreAt(thetaDeg) {
+    const th = thetaDeg * Math.PI / 180;
+    const s = Math.sin(th), c = Math.cos(th);
+    const bins = new Float64Array(binsLen);
+    for (let i = 0; i < pts.length; i += 2) {
+      const bin = Math.round(pts[i] * s + pts[i + 1] * c) + offset;
+      if (bin >= 0 && bin < binsLen) bins[bin]++;
+    }
+    let mean = 0;
+    for (let i = 0; i < binsLen; i++) mean += bins[i];
+    mean /= binsLen;
+    let variance = 0;
+    for (let i = 0; i < binsLen; i++) { const d = bins[i] - mean; variance += d * d; }
+    return variance;
+  }
+
+  let best = 0, bestScore = -Infinity;
+  for (let a = -15; a <= 15; a += 1) {
+    const sc = scoreAt(a);
+    if (sc > bestScore) { bestScore = sc; best = a; }
+  }
+  let fineBest = best, fineScore = bestScore;
+  for (let a = best - 1.4; a <= best + 1.4 + 1e-9; a += 0.1) {
+    const sc = scoreAt(a);
+    if (sc > fineScore) { fineScore = sc; fineBest = a; }
+  }
+
+  return Math.round(fineBest * 10) / 10;
+}
+
+async function detectSkewAngle(n) {
+  const canvas = deskewCanvases[n - 1];
+  if (!canvas) { toast('Halaman belum selesai dimuat, coba lagi sebentar.'); return; }
+  const btn = document.getElementById('dskDetectBtn-' + n);
+  if (btn) { btn.disabled = true; btn.classList.add('detecting'); btn.textContent = '...'; }
+  await new Promise(r => setTimeout(r, 0));
+  try {
+    const angle = _computeSkewAngle(canvas);
+    setDeskewAngle(n, angle);
+  } catch (e) {
+    console.warn('Deteksi gagal halaman', n, e);
+    toast('Deteksi gagal untuk halaman ' + n + '.');
+  }
+  if (btn) { btn.disabled = false; btn.classList.remove('detecting'); btn.textContent = 'Deteksi'; }
+}
+
+async function detectAllSkew() {
+  if (!editFilePages) return;
+  const btn  = document.getElementById('deskewDetectAllBtn');
+  const hint = document.getElementById('deskewFooterHint');
+  const origHint = hint ? hint.textContent : '';
+  if (btn) btn.disabled = true;
+  for (let i = 1; i <= editFilePages; i++) {
+    if (deskewAbortFlag) break;
+    if (!deskewCanvases[i - 1]) continue;
+    if (hint) hint.textContent = `Mendeteksi kemiringan... (${i}/${editFilePages})`;
+    await new Promise(r => setTimeout(r, 0));
+    try {
+      const angle = _computeSkewAngle(deskewCanvases[i - 1]);
+      setDeskewAngle(i, angle);
+    } catch (e) { console.warn('Deteksi gagal halaman', i, e); }
+  }
+  if (hint) hint.textContent = origHint;
+  if (btn) btn.disabled = false;
+  toast('Deteksi otomatis selesai untuk semua halaman.');
+}
+
+async function applyDeskew() {
+  if (!editFile || !editFilePages) return;
+  const changed = deskewAngles.filter(a => Math.abs(a) > 0.05).length;
+  if (!changed) { toast('Belum ada halaman dengan sudut koreksi. Atur sudut dulu, atau pakai Deteksi Otomatis.'); return; }
+
+  const btn  = document.getElementById('deskewApplyBtn');
+  const hint = document.getElementById('deskewFooterHint');
+  const origHint = hint ? hint.textContent : '';
+  if (btn) btn.disabled = true;
+
+  try {
+    const { PDFDocument } = PDFLib;
+    const srcBuf = await editFile.arrayBuffer();
+    const srcDoc = await PDFDocument.load(srcBuf, { ignoreEncryption: true, throwOnInvalidObject: false, updateMetadata: false });
+    const resultDoc = await PDFDocument.create();
+
+    const loadTask  = window.pdfjsLib.getDocument({ data: srcBuf.slice(0) });
+    const pdfJsDoc  = await loadTask.promise;
+    const HQ_SCALE  = 2.5; // ~180 DPI equivalent — comfortably matches/exceeds typical scan quality
+
+    for (let i = 0; i < editFilePages; i++) {
+      const angle = deskewAngles[i] || 0;
+      if (hint) hint.textContent = `Memproses halaman ${i + 1} / ${editFilePages}...`;
+      await new Promise(r => setTimeout(r, 0));
+
+      if (Math.abs(angle) <= 0.05) {
+        const [pg] = await resultDoc.copyPages(srcDoc, [i]);
+        resultDoc.addPage(pg);
+        continue;
+      }
+
+      const page     = await pdfJsDoc.getPage(i + 1);
+      const viewport = page.getViewport({ scale: HQ_SCALE });
+      const w = Math.round(viewport.width), h = Math.round(viewport.height);
+
+      const srcCanvas = document.createElement('canvas');
+      srcCanvas.width = w; srcCanvas.height = h;
+      await page.render({ canvasContext: srcCanvas.getContext('2d'), viewport }).promise;
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = w; outCanvas.height = h;
+      const octx = outCanvas.getContext('2d');
+      octx.imageSmoothingQuality = 'high';
+      octx.fillStyle = '#ffffff';
+      octx.fillRect(0, 0, w, h);
+      octx.translate(w / 2, h / 2);
+      octx.rotate(angle * Math.PI / 180);
+      octx.drawImage(srcCanvas, -w / 2, -h / 2, w, h);
+
+      const jpgBytes = await new Promise((resolve, reject) => {
+        outCanvas.toBlob(blob => {
+          if (!blob) { reject(new Error('Gagal membuat gambar halaman ' + (i + 1))); return; }
+          blob.arrayBuffer().then(resolve, reject);
+        }, 'image/jpeg', 0.92);
+      });
+
+      const jpg = await resultDoc.embedJpg(new Uint8Array(jpgBytes));
+      const pageWidthPt  = viewport.width  / HQ_SCALE;
+      const pageHeightPt = viewport.height / HQ_SCALE;
+      const newPage = resultDoc.addPage([pageWidthPt, pageHeightPt]);
+      newPage.drawImage(jpg, { x: 0, y: 0, width: pageWidthPt, height: pageHeightPt });
+    }
+
+    const out = await resultDoc.save({ useObjectStreams: true });
+    dlBlob(out, editFile.name.replace(/\.pdf$/i, '') + '_lurus.pdf');
+    toast(`${changed} halaman berhasil diluruskan & diunduh!`);
+    if (hint) hint.textContent = origHint;
+    closeDeskewEditor();
+  } catch (e) {
+    console.error('Deskew apply failed:', e);
+    toast('Gagal memproses: ' + (e.message ? e.message.substring(0, 80) : 'Error tidak diketahui'));
+    if (hint) hint.textContent = origHint;
+  }
+
+  if (btn) btn.disabled = false;
 }
 
 // ===================== SPLIT PDF =====================
@@ -1885,16 +2218,23 @@ function _loadScript(src) {
   });
 }
 
-async function _ensureOCRLibs(onStatus) {
-  if (_ocrLibsReady) return;
-
-  onStatus('Mengunduh PDF.js renderer...');
+let _pdfJsReady = false;
+async function _ensurePdfJs(onStatus) {
+  if (_pdfJsReady) return;
+  if (onStatus) onStatus('Mengunduh PDF.js renderer...');
   await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
   window.pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
   if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc =
       'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
+  _pdfJsReady = true;
+}
+
+async function _ensureOCRLibs(onStatus) {
+  if (_ocrLibsReady) return;
+
+  await _ensurePdfJs(onStatus);
 
   onStatus('Mengunduh Tesseract OCR engine...');
   await _loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');

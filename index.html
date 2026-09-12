@@ -78,7 +78,7 @@
             <ol>
               <li>Compress: drag PDF, pilih mode, atur kualitas, klik Kompres Semua</li>
               <li>Gabung: upload beberapa PDF, atur urutan dengan drag, klik Gabung</li>
-              <li>Edit Halaman: upload PDF, pilih operasi (hapus/ambil/sisipkan/putar), proses</li>
+              <li>Edit Halaman: upload PDF, pilih operasi (hapus/ambil/sisipkan/putar/luruskan), proses</li>
               <li>Split: upload PDF, pilih mode pemisahan, preview hasil, unduh ZIP</li>
               <li>Batch Combine: upload template Header/Footer, upload file, proses semua</li>
             </ol>
@@ -333,6 +333,7 @@
         <div class="op-card" id="opKeep" onclick="setOp('keep')"><div class="op-icon">&#128204;</div><div class="op-name">Ambil Halaman Tertentu</div><div class="op-desc">Hanya simpan halaman yang kamu tentukan</div></div>
         <div class="op-card" id="opInsert" onclick="setOp('insert')"><div class="op-icon">&#10133;</div><div class="op-name">Sisipkan dari PDF Lain</div><div class="op-desc">Masukkan halaman dari PDF kedua di posisi tertentu</div></div>
         <div class="op-card" id="opRotate" onclick="setOp('rotate')"><div class="op-icon">&#128260;</div><div class="op-name">Putar Halaman</div><div class="op-desc">Rotasi halaman tertentu atau semua halaman 90/180/270 derajat</div></div>
+        <div class="op-card" id="opDeskew" onclick="setOp('deskew')"><div class="op-icon">&#128208;</div><div class="op-name">Luruskan Halaman</div><div class="op-desc">Perbaiki halaman yang miring beberapa derajat akibat hasil scan &mdash; atur manual per halaman atau deteksi otomatis</div></div>
       </div>
       <div id="editInputArea" style="margin-top:16px">
         <div id="editPageInputSection">
@@ -355,6 +356,10 @@
             </div>
           </div>
         </div>
+        <div id="deskewSection" style="display:none">
+          <div class="ocr-notice">Buka editor untuk melihat thumbnail tiap halaman, atur sudut koreksi per halaman (manual atau deteksi otomatis), lalu terapkan. Halaman yang tidak diubah sudutnya (0&deg;) akan tetap tajam seperti aslinya &mdash; hanya halaman yang dikoreksi yang diproses ulang.</div>
+          <button class="btn-primary" style="margin-top:12px" onclick="openDeskewEditor()">Buka Editor Kemiringan</button>
+        </div>
         <div id="editInsertSection" style="display:none">
           <div class="insert-section">
             <div class="insert-section-title">File PDF kedua yang akan disisipkan</div>
@@ -375,7 +380,7 @@
           </div>
         </div>
         <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn-primary" onclick="processEdit()">Proses &amp; Unduh</button>
+          <button class="btn-primary" id="editProcessBtn" onclick="processEdit()">Proses &amp; Unduh</button>
           <button class="btn-secondary" onclick="openPagePreview()" id="previewBtn" style="display:none">Lihat Preview Halaman</button>
           <button class="btn-secondary" onclick="editClear()">Batal</button>
         </div>
@@ -422,7 +427,7 @@
         </div>
         <div class="ocr-config" id="ocrConfig" style="display:none">
           <div class="ocr-notice"><strong>Perlu koneksi internet (sekali saja)</strong>Library OCR sekitar 5MB akan diunduh saat pertama diaktifkan. Setelah itu proses berjalan langsung di browser tanpa upload file ke manapun.</div>
-          <div class="ocr-notice" style="border-color:var(--warning);background:var(--warning-light);color:var(--warning);margin-top:8px"><strong>Halaman miring atau rotasi berbeda?</strong> OCR tidak bisa membaca teks yang miring atau terotasi. Jika hasilnya kosong atau salah, buka tab <strong>Edit Halaman &rsaquo; Putar Halaman</strong> untuk meluruskan halaman PDF terlebih dahulu, lalu jalankan Split lagi.</div>
+          <div class="ocr-notice" style="border-color:var(--warning);background:var(--warning-light);color:var(--warning);margin-top:8px"><strong>Halaman miring atau rotasi berbeda?</strong> OCR tidak bisa membaca teks yang miring atau terotasi. Kalau halaman terbalik/miring 90&deg;, buka <strong>Edit Halaman &rsaquo; Putar Halaman</strong>. Kalau miring cuma beberapa derajat akibat hasil scan, buka <strong>Edit Halaman &rsaquo; Luruskan Halaman</strong> (bisa deteksi otomatis). Setelah diluruskan, jalankan Split lagi.</div>
           <div>
             <label style="display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:7px">Kata kunci yang dicari di dalam setiap halaman</label>
             <input type="text" id="ocrKeyword" class="split-name-input" style="width:100%;font-size:13px" value="Sample Identification" placeholder="Contoh: Sample Identification">
@@ -550,6 +555,30 @@
     <div class="zoom-frame-wrap" id="zoomFrameWrap"><iframe id="zoomIframe" scrolling="auto"></iframe></div>
   </div>
 </div>
+<!-- Deskew Editor Overlay -->
+<div class="preview-overlay" id="deskewOverlay">
+  <div class="preview-header">
+    <div><div class="preview-title">Editor Kemiringan Halaman</div><div class="preview-subtitle" id="deskewSubtitle"></div></div>
+    <div class="preview-actions">
+      <button class="select-all-btn" onclick="detectAllSkew()" id="deskewDetectAllBtn">Deteksi Otomatis Semua</button>
+      <button class="select-all-btn" onclick="resetAllSkew()">Reset Semua</button>
+    </div>
+  </div>
+  <div class="preview-body" id="deskewBody">
+    <div class="preview-loading" id="deskewLoading">
+      <div id="deskewLoadingText">Memuat halaman...</div>
+      <div style="width:200px;margin:10px auto 0;background:var(--border);border-radius:3px;height:3px;overflow:hidden"><div class="preview-progress-bar" id="deskewProgressBar" style="width:0%"></div></div>
+    </div>
+    <div class="deskew-grid" id="deskewGrid" style="display:none"></div>
+  </div>
+  <div class="preview-footer">
+    <div class="preview-hint" id="deskewFooterHint">Geser slider, ketik sudut manual, atau klik Deteksi per halaman &mdash; lalu Terapkan.</div>
+    <div style="display:flex;gap:9px">
+      <button class="preview-btn-close" onclick="closeDeskewEditor()">Tutup</button>
+      <button class="preview-btn-apply" onclick="applyDeskew()" id="deskewApplyBtn">Terapkan &amp; Unduh</button>
+    </div>
+  </div>
+</div>
 </div>
 <!-- QRIS Modal (root level - accessible from all pages) -->
 <div class="modal-overlay" id="qrisModal" onclick="if(event.target===this)closeQris()">
@@ -557,7 +586,7 @@
     <h3>Donasi via QRIS</h3>
     <p>Scan QR Code di bawah dengan aplikasi e-wallet atau m-banking kamu. Terima kasih atas dukungannya!</p>
     <div class="qris-placeholder" id="qrisBox">
-      <img id="qrisImg" src="https://lh3.googleusercontent.com/d/133Ct_k-ql0PXklNLgQeWGLswIajbxKtg" alt="QRIS Ifan Creative" style="width:100%;height:100%;object-fit:contain" onerror="qrisFallback()">
+      <img id="qrisImg" src="https://lh3.googleusercontent.com/d/133Ct_k-ql0PXklNLgQeWGLswIajbxKtg" alt="QRIS Ifan Creative" style="width:100%;height:100%;object-fit:contain" onerror="if(window.qrisFallback)qrisFallback()">
     </div>
     <button class="modal-close" onclick="closeQris()">Tutup</button>
   </div>
